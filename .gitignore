@@ -1,0 +1,48 @@
+# compiled output
+/dist
+/node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+pnpm-debug.log*
+bun.lockb
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+migrations
+./reports
+pnpm-lock.yaml
+# OS
+.DS_Store
+.vs_code
+# Tests
+/coverage
+/.nyc_output
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+#env
+.env
+.env*.local
+.env*
+.env.prod
+*.ogg
+sessions.json
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+# save file
+uploads/*
+*uploads*

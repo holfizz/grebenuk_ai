@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  telegramId    String    @unique @map("telegram_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  balance       Int       @default(0)
+  planId        String?   @map("plan_id")
+  planExpiresAt DateTime? @map("plan_expires_at")
+
+  // Связь с ответами пользователя
+  userResponses UserResponse[]
+
+  // Новая связь с историей диалогов
+  chatHistory ChatHistory[]
+
+  @@map("users")
+}
+
+// Модель для категорий возражений
+model ObjectionCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Связь с возражениями
+  objections Objection[]
+
+  @@map("objection_categories")
+}
+
+// Модель для возражений
+model Objection {
+  id         String            @id @default(uuid())
+  text       String
+  categoryId String            @map("category_id")
+  category   ObjectionCategory @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  // Связь с ответами пользователя
+  userResponses UserResponse[]
+
+  @@unique([text, categoryId])
+  @@map("objections")
+}
+
+// Модель для ответов пользователя
+model UserResponse {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id])
+  objectionId     String    @map("objection_id")
+  objection       Objection @relation(fields: [objectionId], references: [id])
+  responseText    String    @map("response_text")
+  audioUrl        String?   @map("audio_url")
+  score           Int? // Оценка от 1 до 10
+  feedback        String? // Обратная связь от AI
+  hasRecognition  Boolean   @default(false) @map("has_recognition")
+  hasArgument     Boolean   @default(false) @map("has_argument")
+  hasReversal     Boolean   @default(false) @map("has_reversal")
+  hasCallToAction Boolean   @default(false) @map("has_call_to_action")
+  idealResponse   String?   @map("ideal_response")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("user_responses")
+}
+
+// Модель для хранения принципов Гребенюка
+model Principle {
+  id          String   @id @default(uuid())
+  number      Int      @unique
+  title       String
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("principles")
+}
+
+// Модель для хранения фраз Гребенюка
+model Phrase {
+  id        String   @id @default(uuid())
+  text      String
+  category  String? // Категория фразы (мотивационная, критическая и т.д.)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("phrases")
+}
+
+// Модель для хранения истории диалогов
+model ChatHistory {
+  id            String   @id @default(uuid())
+  userId        String
+  objectionText String   @db.Text
+  userResponse  String   @db.Text
+  botResponse   String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
