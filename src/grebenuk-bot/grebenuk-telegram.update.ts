@@ -75,9 +75,12 @@ export class GrebenukTelegramUpdate {
         hasAnsweredCurrentObjection: false,
       });
 
+      // Формируем абсолютный путь к изображению
+      const imagePath = path.join(__dirname, "..", "..", "src", "assets", "start.jpg");
+
       // Отправляем приветственное сообщение с изображением
       await ctx.replyWithPhoto(
-        { source: "./src/assets/start.jpg" },
+        { source: imagePath },
         {
           caption:
             "🔥 Добро пожаловать в ИИ-Гребенюка! 🔥\n\n" +
