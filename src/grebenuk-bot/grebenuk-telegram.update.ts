@@ -34,6 +34,7 @@ export class GrebenukTelegramUpdate {
   private readonly logger = new Logger(GrebenukTelegramUpdate.name);
   private readonly sessions: Map<number, SessionData> = new Map();
   private readonly tempDir: string;
+  private readonly assetsPath: string;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<Context>,
@@ -43,8 +44,15 @@ export class GrebenukTelegramUpdate {
     private readonly httpService: HttpService,
   ) {
     this.tempDir = path.join(os.tmpdir(), "grebenuk-bot");
+    // Определяем путь к assets относительно текущего файла
+    this.assetsPath = path.join(process.cwd(), "assets");
+
     if (!fs.existsSync(this.tempDir)) {
       fs.mkdirSync(this.tempDir, { recursive: true });
+    }
+    // Создаем директорию assets если её нет
+    if (!fs.existsSync(this.assetsPath)) {
+      fs.mkdirSync(this.assetsPath, { recursive: true });
     }
   }
 
@@ -75,8 +83,20 @@ export class GrebenukTelegramUpdate {
         hasAnsweredCurrentObjection: false,
       });
 
-      // Формируем абсолютный путь к изображению
-      const imagePath = path.join(__dirname, "..", "..", "src", "assets", "start.jpg");
+      // Формируем путь к изображению
+      const imagePath = path.join(this.assetsPath, "start.jpg");
+
+      // Проверяем существование файла
+      if (!fs.existsSync(imagePath)) {
+        // Если файл не найден с расширением .jpg, пробуем .JPG
+        const imagePathUpperCase = path.join(this.assetsPath, "start.JPG");
+        if (fs.existsSync(imagePathUpperCase)) {
+          // Если найден файл с верхним регистром, копируем его с нижним регистром
+          fs.copyFileSync(imagePathUpperCase, imagePath);
+        } else {
+          throw new Error(`Файл изображения не найден: ${imagePath}`);
+        }
+      }
 
       // Отправляем приветственное сообщение с изображением
       await ctx.replyWithPhoto(
@@ -102,7 +122,23 @@ export class GrebenukTelegramUpdate {
       );
     } catch (error) {
       this.logger.error(`Ошибка при обработке команды /start: ${error.message}`);
-      await ctx.reply("Произошла ошибка. Пожалуйста, попробуйте позже.");
+      // Отправляем сообщение без изображения в случае ошибки
+      await ctx.reply(
+        "🔥 Добро пожаловать в ИИ-Гребенюка! 🔥\n\n" +
+          "Хочешь расти, зарабатывать больше и не тупить? Жми СТАРТ.\n" +
+          "Этот бот — твой персональный наставник. Он встряхнет тебя, даст четкие советы по бизнесу 💼, " +
+          "прокачает твои навыки и не даст слиться.\n\n" +
+          "⚡ Готов к разбору полетов? Жми СТАРТ! 🚀",
+        Markup.keyboard([
+          ["🎯 Случайное возражение"],
+          ["💰 Возражения по цене"],
+          ["🤝 Возражения по доверию"],
+          ["⏱ Возражения по срочности"],
+          ["🛒 Возражения по потребности"],
+          ["⚙️ Возражения по функциональности"],
+          ["🤖 Сгенерировать возражения"],
+        ]).resize(),
+      );
     }
   }
 
